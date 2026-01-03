@@ -1,7 +1,7 @@
 {
   "name": "yield-index-vault-contracts",
   "version": "1.0.0",
-  "description": "Yield Index Vault - ERC-4626 aggregator for Morpho vaults",
+  "description": "Tesseract Demo Vault - ERC-4626 aggregator for Morpho vaults",
   "scripts": {
     "compile": "hardhat compile",
     "compile:vault": "bash scripts/compile-vault.sh",

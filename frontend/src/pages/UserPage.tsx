@@ -32,7 +32,7 @@ export default function UserPage() {
         <div className="card text-center max-w-md">
           <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>
           <p className="text-slate-400">
-            Please connect your wallet to access the Yield Index Vault
+            Please connect your wallet to access the Tesseract Demo Vault
           </p>
         </div>
       </div>

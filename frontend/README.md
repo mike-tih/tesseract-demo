@@ -1,6 +1,6 @@
-# Yield Index Vault - Frontend
+# Tesseract Demo Vault - Frontend
 
-React + TypeScript frontend for Yield Index Vault. Built with Vite, wagmi v2, RainbowKit, and Tailwind CSS.
+React + TypeScript frontend for Tesseract Demo Vault. Built with Vite, wagmi v2, RainbowKit, and Tailwind CSS.
 
 ## ✅ What's Done
 
@@ -27,7 +27,6 @@ cp .env.example .env
 # Edit .env:
 # - Add WalletConnect Project ID
 # - Add deployed Vault address
-# - Add RPC URLs
 
 # 3. Run development server
 npm run dev
@@ -100,8 +99,6 @@ npm run compile:vault
 Update `.env.local` with actual deployed addresses:
 ```env
 VITE_WALLET_CONNECT_ID=your_walletconnect_project_id
-VITE_MAINNET_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY
-VITE_SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
 VITE_VAULT_ADDRESS=0x...  # Deployed vault address
 VITE_USDC_ADDRESS=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48  # Mainnet USDC
 VITE_DEFAULT_CHAIN_ID=1  # 1 for mainnet, 11155111 for Sepolia
@@ -131,8 +128,6 @@ Pre-styled Tailwind classes:
 
 ```env
 VITE_WALLET_CONNECT_ID=your_project_id
-VITE_MAINNET_RPC_URL=https://...
-VITE_SEPOLIA_RPC_URL=https://...
 VITE_VAULT_ADDRESS=0x...  # From deployment
 VITE_USDC_ADDRESS=0x...   # USDC token
 VITE_DEFAULT_CHAIN_ID=11155111  # Sepolia

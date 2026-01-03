@@ -1,4 +1,4 @@
-# Yield Index Vault - Implementation Status
+# Tesseract Demo Vault - Implementation Status
 
 ## ✅ Completed
 

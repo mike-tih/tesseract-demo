@@ -212,7 +212,7 @@ asset: public(address)
 # Based off the `asset` decimals.
 decimals: public(uint8)
 # Deployer contract used to retrieve the protocol fee config.
-factory: address
+# factory: address - REMOVED FOR SIMPLICITY
 
 # HashMap that records all the strategies that are allowed to receive assets from the vault.
 strategies: public(HashMap[address, StrategyParams])
@@ -279,9 +279,11 @@ PERMIT_TYPE_HASH: constant(bytes32) = keccak256("Permit(address owner,address sp
 # Constructor
 @external
 def __init__():
-    # Set `asset` so it cannot be re-initialized.
-    self.asset = self
-    
+    # NOTE: Modified from original Yearn implementation to allow direct deployment
+    # Original sets self.asset = self to prevent initialization (for proxy pattern)
+    # We allow direct deployment by not blocking initialization
+    pass
+
 @external
 def initialize(
     asset: address, 
@@ -311,9 +313,6 @@ def initialize(
     self.asset = asset
     # Get the decimals for the vault to use.
     self.decimals = ERC20Detailed(asset).decimals()
-    
-    # Set the factory as the deployer address.
-    self.factory = msg.sender
 
     # Must be less than one year for report cycles
     assert profit_max_unlock_time <= 31_556_952 # dev: profit unlock time too long
@@ -1202,7 +1201,8 @@ def _process_report(strategy: address) -> (uint256, uint256):
             total_fees_shares = shares_to_burn * total_fees / (loss + total_fees)
 
             # Get the protocol fee config for this vault.
-            protocol_fee_bps, protocol_fee_recipient = IFactory(self.factory).protocol_fee_config()
+            protocol_fee_bps = 0 # HARDCODED FOR SIMPLICITY
+            protocol_fee_recipient = empty(address) # HARDCODED FOR SIMPLICITY
 
             # If there is a protocol fee.
             if protocol_fee_bps > 0:
@@ -2100,16 +2100,6 @@ def previewRedeem(shares: uint256) -> uint256:
     @return The amount of assets that would be withdrawn.
     """
     return self._convert_to_assets(shares, Rounding.ROUND_DOWN)
-
-@view
-@external
-def FACTORY() -> address:
-    """
-    @notice Address of the factory that deployed the vault.
-    @dev Is used to retrieve the protocol fees.
-    @return Address of the vault factory.
-    """
-    return self.factory
 
 @pure
 @external

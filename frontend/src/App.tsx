@@ -12,7 +12,7 @@ function App() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-8">
                 <h1 className="text-2xl font-bold text-vault-blue">
-                  Yield Index Vault
+                  Tesseract Demo Vault
                 </h1>
                 <div className="flex gap-4">
                   <Link to="/" className="text-slate-300 hover:text-white transition-colors">

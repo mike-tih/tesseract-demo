@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 /**
- * Deployment script for Yield Index Vault
+ * Deployment script for Tesseract Demo Vault
  *
  * Deploys Vault.vy directly from compiled bytecode + calls initialize()
  *
@@ -16,27 +16,47 @@ async function main() {
   const [deployer] = await ethers.getSigners();
   const network = await ethers.provider.getNetwork();
 
-  console.log("🚀 Yield Index Vault Deployment");
+  console.log("🚀 Tesseract Demo Vault Deployment");
   console.log("================================");
   console.log("Network:", network.name, `(chainId: ${network.chainId})`);
   console.log("Deployer:", deployer.address);
   console.log("Balance:", ethers.formatEther(await ethers.provider.getBalance(deployer.address)), "ETH\n");
 
   // Load environment variables
-  const USDC_ADDRESS = process.env.USDC_ADDRESS;
   const ADMIN_ADDRESS = process.env.ADMIN_ADDRESS || deployer.address;
+  const VAULT_NAME = process.env.VAULT_NAME || "Tesseract Demo Vault";
+  const VAULT_SYMBOL = process.env.VAULT_SYMBOL || "YINDX";
+  const PROFIT_MAX_UNLOCK_TIME = parseInt(process.env.PROFIT_MAX_UNLOCK_TIME || "604800");
 
-  if (!USDC_ADDRESS) {
-    throw new Error("USDC_ADDRESS not set in .env");
+  // Auto-select USDC address based on network
+  let USDC_ADDRESS: string;
+
+  if (network.chainId === 1n) {
+    // Ethereum Mainnet
+    USDC_ADDRESS = process.env.MAINNET_USDC_ADDRESS || "";
+    if (!USDC_ADDRESS) {
+      throw new Error("MAINNET_USDC_ADDRESS not set in .env");
+    }
+  } else if (network.chainId === 11155111n) {
+    // Sepolia Testnet
+    USDC_ADDRESS = process.env.SEPOLIA_USDC_ADDRESS || "";
+    if (!USDC_ADDRESS) {
+      throw new Error("SEPOLIA_USDC_ADDRESS not set in .env");
+    }
+  } else {
+    throw new Error(`Unsupported network: ${network.name} (chainId: ${network.chainId})`);
   }
 
   console.log("Configuration:");
   console.log("  USDC Address:", USDC_ADDRESS);
   console.log("  Admin Address:", ADMIN_ADDRESS);
+  console.log("  Vault Name:", VAULT_NAME);
+  console.log("  Vault Symbol:", VAULT_SYMBOL);
+  console.log("  Profit Max Unlock Time:", PROFIT_MAX_UNLOCK_TIME, "seconds");
   console.log();
 
   // Load compiled Vault.vy artifact
-  const artifactPath = path.join(__dirname, "../artifacts/Vault.json");
+  const artifactPath = path.join(__dirname, "../contracts/artifacts/Vault.json");
 
   if (!fs.existsSync(artifactPath)) {
     throw new Error(
@@ -66,10 +86,10 @@ async function main() {
 
   const initTx = await vault.initialize(
     USDC_ADDRESS,              // asset
-    "Yield Index Vault",       // name
-    "YINDX",                   // symbol
+    VAULT_NAME,                // name
+    VAULT_SYMBOL,              // symbol
     ADMIN_ADDRESS,             // role_manager
-    604800                     // profit_max_unlock_time (7 days in seconds)
+    PROFIT_MAX_UNLOCK_TIME     // profit_max_unlock_time
   );
 
   await initTx.wait();

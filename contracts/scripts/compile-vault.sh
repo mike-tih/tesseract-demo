@@ -70,11 +70,14 @@ const data = fs.readFileSync('contracts/artifacts/Vault.json.tmp', 'utf8');
 const lines = data.split('\n');
 
 try {
+    // Helper to ensure 0x prefix without duplication
+    const ensureHexPrefix = (hex) => hex.startsWith('0x') ? hex : '0x' + hex;
+
     const artifact = {
         contractName: 'VaultV3',
         abi: JSON.parse(lines[0]),
-        bytecode: '0x' + lines[1],
-        deployedBytecode: '0x' + lines[2]
+        bytecode: ensureHexPrefix(lines[1]),
+        deployedBytecode: ensureHexPrefix(lines[2])
     };
 
     fs.writeFileSync('contracts/artifacts/Vault.json', JSON.stringify(artifact, null, 2));

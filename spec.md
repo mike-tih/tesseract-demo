@@ -1,4 +1,4 @@
-# Yield Index Vault — Technical Specification
+# Tesseract Demo Vault — Technical Specification
 
 ## Overview
 

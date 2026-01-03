@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 /**
- * Configuration script for Yield Index Vault
+ * Configuration script for Tesseract Demo Vault
  *
  * This script configures a deployed Yearn V3 Vault:
  * 1. Sets admin roles
@@ -20,7 +20,7 @@ async function main() {
   const [deployer] = await ethers.getSigners();
   const network = await ethers.provider.getNetwork();
 
-  console.log("⚙️  Yield Index Vault Configuration");
+  console.log("⚙️  Tesseract Demo Vault Configuration");
   console.log("===================================");
   console.log("Network:", network.name, `(chainId: ${network.chainId})`);
   console.log("Deployer:", deployer.address);

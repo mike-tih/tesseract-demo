@@ -1,11 +1,11 @@
-# Yield Index Vault - Smart Contracts
+# Tesseract Demo Vault - Smart Contracts
 
 ERC-4626 vault aggregator that accepts USDC and distributes capital across multiple ERC-4626 strategies (e.g., MetaMorpho vaults). Built on Yearn V3 Vault (unmodified).
 
 ## Architecture
 
 ```
-User (USDC) → Yield Index Vault (Yearn V3) → 4x ERC-4626 Strategies → Morpho Blue Markets
+User (USDC) → Tesseract Demo Vault (Yearn V3) → 4x ERC-4626 Strategies → Morpho Blue Markets
 ```
 
 ## Project Structure
