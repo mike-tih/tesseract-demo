@@ -1,6 +1,6 @@
 # Tesseract Demo Vault
 
-ERC-4626 vault aggregator built on Yearn V3 that accepts USDC and distributes capital across multiple Morpho USDC vaults.
+ERC-4626 vault aggregator with a fork of Yearn V3 contract that accepts USDC and distributes capital across multiple Morpho USDC vaults.
 
 > **Note**: This is a technical assessment project for Tesseract.
 
@@ -48,7 +48,7 @@ User (USDC) → Tesseract Vault (ERC-4626) → Strategies (MetaMorpho Vaults)
 ```
 
 **Key Components:**
-- **Yearn V3 Vault** - Unmodified, battle-tested vault implementation
+- **Yearn V3 Vault** - Fork with minor modifications to enable deployment without factory
 - **ERC-4626** - Standard vault interface for deposits/withdrawals
 - **Multi-Strategy** - Distribute capital across multiple Morpho vaults
 - **Role-Based Access** - Granular permissions for strategy management
@@ -198,4 +198,4 @@ VITE_MAINNET_USDC_ADDRESS=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
 
 ## License
 
-GPL-3.0 (same as Yearn V3)
+GNU AGPLv3
