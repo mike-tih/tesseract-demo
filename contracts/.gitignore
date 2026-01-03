@@ -1,0 +1,24 @@
+# Hardhat
+cache/
+artifacts/
+typechain-types/
+
+# Compiled Vyper artifacts
+contracts/artifacts/
+
+# Deployment info (optional - commit if you want to track deployments)
+deployments/
+
+# Coverage
+coverage/
+coverage.json
+
+# Environment
+.env
+.env.local
+
+# TypeScript
+*.tsbuildinfo
+
+# Dependencies
+node_modules/

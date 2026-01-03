@@ -1,0 +1,22 @@
+# Yearn V3 Vault Contracts
+
+Please download the following files from https://github.com/yearn/yearn-vaults-v3:
+
+1. **Vault.vy** or **VaultV3.vy** - Main vault contract
+   - From: `contracts/VaultV3.vy` or `contracts/Vault.vy`
+   - Copy to: `contracts/vendor/yearn-v3/Vault.vy`
+
+2. **Interfaces** (will be copied separately to contracts/interfaces/):
+   - IVault.sol
+   - Roles.sol
+
+## Download Instructions:
+
+```bash
+# From project root
+cd contracts/contracts/vendor/yearn-v3/
+
+# Download Vault.vy
+curl -O https://raw.githubusercontent.com/yearn/yearn-vaults-v3/master/contracts/VaultV3.vy
+mv VaultV3.vy Vault.vy
+```
