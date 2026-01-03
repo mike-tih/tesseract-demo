@@ -1,4 +1,4 @@
-import { useReadContract, useChainId } from 'wagmi'
+import { useReadContract, useReadContracts, useChainId } from 'wagmi'
 import { getVaultAddress, VAULT_ABI } from '../config/contracts'
 import { formatUnits } from 'viem'
 
@@ -26,22 +26,25 @@ export function useStrategies() {
 
   const queue = (queueData as `0x${string}`[]) || []
 
-  // For each strategy, fetch its details
-  // Note: In production, you might want to batch these calls
-  const strategies: StrategyInfo[] = queue.map((strategyAddress) => {
-    // Get strategy params (returns struct with current_debt, max_debt, etc)
-    const { data: strategyData } = useReadContract({
+  // Batch read all strategy details using useReadContracts
+  const { data: strategiesData, isLoading: loadingStrategies } = useReadContracts({
+    contracts: queue.map((strategyAddress) => ({
       address: vaultAddress,
       abi: VAULT_ABI,
       functionName: 'strategies',
       args: [strategyAddress],
-      query: {
-        enabled: !!vaultAddress,
-        refetchInterval: 30000,
-      },
-    })
+    })),
+    query: {
+      enabled: !!vaultAddress && queue.length > 0,
+      refetchInterval: 30000,
+    },
+  })
 
-    if (!strategyData) {
+  // Map the results to StrategyInfo format
+  const strategies: StrategyInfo[] = queue.map((strategyAddress, index) => {
+    const result = strategiesData?.[index]
+
+    if (!result || result.status !== 'success' || !result.result) {
       return {
         address: strategyAddress,
         currentDebt: 0,
@@ -51,7 +54,7 @@ export function useStrategies() {
     }
 
     // strategyData is a struct: (activation, last_report, current_debt, max_debt)
-    const [, , currentDebt, maxDebt] = strategyData as [bigint, bigint, bigint, bigint]
+    const [, , currentDebt, maxDebt] = result.result as unknown as [bigint, bigint, bigint, bigint]
 
     return {
       address: strategyAddress,
@@ -64,6 +67,6 @@ export function useStrategies() {
   return {
     strategies,
     queue,
-    isLoading: loadingQueue,
+    isLoading: loadingQueue || loadingStrategies,
   }
 }
