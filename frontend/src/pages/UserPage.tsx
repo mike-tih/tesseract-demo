@@ -1,6 +1,7 @@
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi'
 import { useState } from 'react'
 import { parseUnits } from 'viem'
+import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { getVaultAddress, getUsdcAddress, VAULT_ABI, ERC20_ABI } from '../config/contracts'
 import { useVaultData } from '../hooks/useVaultData'
 import { useUserPosition } from '../hooks/useUserPosition'
@@ -13,6 +14,7 @@ export default function UserPage() {
   const usdcAddress = getUsdcAddress(chainId)
   const [depositAmount, setDepositAmount] = useState('')
   const [withdrawAmount, setWithdrawAmount] = useState('')
+  const { openConnectModal } = useConnectModal()
 
   // Fetch data using hooks
   const { totalAssets, isLoading: loadingVault } = useVaultData()
@@ -30,19 +32,6 @@ export default function UserPage() {
   const { isLoading: isWithdrawing } = useWaitForTransactionReceipt({ hash: withdrawHash })
 
   const networkName = chainId === 1 ? 'Mainnet' : chainId === 11155111 ? 'Sepolia' : 'Unknown'
-
-  if (!isConnected) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="card text-center max-w-md">
-          <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>
-          <p className="text-slate-400">
-            Please connect your wallet to access the Tesseract Demo Vault
-          </p>
-        </div>
-      </div>
-    )
-  }
 
   if (!vaultAddress || !usdcAddress) {
     return (
@@ -146,33 +135,50 @@ export default function UserPage() {
           <div className="space-y-4">
             <div>
               <label className="label">Amount</label>
-              <input
-                type="number"
-                className="input"
-                placeholder="0.00"
-                value={depositAmount}
-                onChange={(e) => setDepositAmount(e.target.value)}
-              />
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  className="input flex-1"
+                  placeholder="0.00"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                />
+                <button
+                  className="btn-secondary px-4"
+                  onClick={() => setDepositAmount(usdcBalance.toString())}
+                  disabled={!isConnected}
+                >
+                  Max
+                </button>
+              </div>
               <p className="text-sm text-slate-400 mt-1">
                 Available: {usdcBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC
               </p>
             </div>
-            {needsApproval && (
+            {!isConnected ? (
               <button
                 className="btn-primary w-full"
+                onClick={openConnectModal}
+              >
+                Connect Wallet
+              </button>
+            ) : needsApproval ? (
+              <button
+                className="btn-secondary w-full"
                 onClick={handleApprove}
                 disabled={isApproving}
               >
                 {isApproving ? 'Approving...' : 'Approve USDC'}
               </button>
+            ) : (
+              <button
+                className="btn-primary w-full"
+                onClick={handleDeposit}
+                disabled={!canDeposit || isDepositing}
+              >
+                {isDepositing ? 'Depositing...' : 'Deposit'}
+              </button>
             )}
-            <button
-              className="btn-secondary w-full"
-              onClick={handleDeposit}
-              disabled={!canDeposit || isDepositing}
-            >
-              {isDepositing ? 'Depositing...' : 'Deposit'}
-            </button>
           </div>
         </div>
 
@@ -182,24 +188,42 @@ export default function UserPage() {
           <div className="space-y-4">
             <div>
               <label className="label">Amount</label>
-              <input
-                type="number"
-                className="input"
-                placeholder="0.00"
-                value={withdrawAmount}
-                onChange={(e) => setWithdrawAmount(e.target.value)}
-              />
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  className="input flex-1"
+                  placeholder="0.00"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                />
+                <button
+                  className="btn-secondary px-4"
+                  onClick={() => setWithdrawAmount(assets.toString())}
+                  disabled={!isConnected}
+                >
+                  Max
+                </button>
+              </div>
               <p className="text-sm text-slate-400 mt-1">
                 Available: {assets.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC
               </p>
             </div>
-            <button
-              className="btn-primary w-full"
-              onClick={handleWithdraw}
-              disabled={!canWithdraw || isWithdrawing}
-            >
-              {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
-            </button>
+            {!isConnected ? (
+              <button
+                className="btn-primary w-full"
+                onClick={openConnectModal}
+              >
+                Connect Wallet
+              </button>
+            ) : (
+              <button
+                className="btn-primary w-full"
+                onClick={handleWithdraw}
+                disabled={!canWithdraw || isWithdrawing}
+              >
+                {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -216,18 +240,34 @@ export default function UserPage() {
             <div className="space-y-3">
               {strategies.map((strategy, idx) => {
                 const percentage = totalAssets > 0 ? (strategy.currentDebt / totalAssets) * 100 : 0
+                const morphoUrl = `https://app.morpho.org/ethereum/vault/${strategy.address}`
                 return (
                   <div key={strategy.address} className="p-4 bg-slate-700/50 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="font-semibold">Strategy {idx + 1}</p>
+                      <div className="flex-1">
+                        <p className="font-semibold">{strategy.name}</p>
+                        {strategy.symbol && (
+                          <p className="text-xs text-slate-500">{strategy.symbol}</p>
+                        )}
+                      </div>
                       <p className="text-vault-blue">{percentage.toFixed(1)}%</p>
                     </div>
-                    <p className="text-sm text-slate-400 mb-1">
+                    <p className="text-sm text-slate-400 mb-2">
                       Current Debt: ${strategy.currentDebt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
-                    <p className="text-xs text-slate-500 font-mono break-all">
-                      {strategy.address}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-slate-500 font-mono break-all flex-1">
+                        {strategy.address}
+                      </p>
+                      <a
+                        href={morphoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-vault-blue hover:text-vault-blue/80 whitespace-nowrap"
+                      >
+                        View on Morpho ↗
+                      </a>
+                    </div>
                   </div>
                 )
               })}

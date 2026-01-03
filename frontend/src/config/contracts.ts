@@ -59,6 +59,24 @@ export const ERC20_ABI = [
   },
 ] as const;
 
+// ERC-4626 ABI for reading strategy metadata
+export const ERC4626_ABI = [
+  {
+    inputs: [],
+    name: 'name',
+    outputs: [{ name: '', type: 'string' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'symbol',
+    outputs: [{ name: '', type: 'string' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
 // Simplified Vault ABI (key functions only)
 // TODO: Replace with full ABI from contracts/artifacts/Vault.json
 export const VAULT_ABI = [
@@ -73,6 +91,20 @@ export const VAULT_ABI = [
   {
     inputs: [],
     name: 'totalSupply',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'totalIdle',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'totalDebt',
     outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
@@ -161,6 +193,16 @@ export const VAULT_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
+  {
+    inputs: [
+      { name: 'strategy', type: 'address' },
+      { name: 'new_max_debt', type: 'uint256' },
+    ],
+    name: 'update_max_debt_for_strategy',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
   // Role Management
   {
     inputs: [{ name: 'account', type: 'address' }],
@@ -212,6 +254,21 @@ export const VAULT_ABI = [
     name: 'get_default_queue',
     outputs: [{ name: '', type: 'address[]' }],
     stateMutability: 'view',
+    type: 'function',
+  },
+  // Deposit Limit Management
+  {
+    inputs: [],
+    name: 'deposit_limit',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'deposit_limit', type: 'uint256' }],
+    name: 'set_deposit_limit',
+    outputs: [],
+    stateMutability: 'nonpayable',
     type: 'function',
   },
 ] as const;

@@ -1,9 +1,11 @@
 import { useReadContract, useReadContracts, useChainId } from 'wagmi'
-import { getVaultAddress, VAULT_ABI } from '../config/contracts'
+import { getVaultAddress, VAULT_ABI, ERC4626_ABI } from '../config/contracts'
 import { formatUnits } from 'viem'
 
 export interface StrategyInfo {
   address: string
+  name: string
+  symbol: string
   currentDebt: number
   maxDebt: number
   isActive: boolean
@@ -40,13 +42,40 @@ export function useStrategies() {
     },
   })
 
+  // Batch read strategy metadata (name and symbol)
+  const { data: metadataData, isLoading: loadingMetadata } = useReadContracts({
+    contracts: queue.flatMap((strategyAddress) => [
+      {
+        address: strategyAddress,
+        abi: ERC4626_ABI,
+        functionName: 'name',
+      },
+      {
+        address: strategyAddress,
+        abi: ERC4626_ABI,
+        functionName: 'symbol',
+      },
+    ]),
+    query: {
+      enabled: !!vaultAddress && queue.length > 0,
+      refetchInterval: 30000,
+    },
+  })
+
   // Map the results to StrategyInfo format
   const strategies: StrategyInfo[] = queue.map((strategyAddress, index) => {
     const result = strategiesData?.[index]
+    const nameResult = metadataData?.[index * 2]
+    const symbolResult = metadataData?.[index * 2 + 1]
+
+    const name = nameResult?.status === 'success' ? (nameResult.result as string) : strategyAddress
+    const symbol = symbolResult?.status === 'success' ? (symbolResult.result as string) : ''
 
     if (!result || result.status !== 'success' || !result.result) {
       return {
         address: strategyAddress,
+        name,
+        symbol,
         currentDebt: 0,
         maxDebt: 0,
         isActive: false,
@@ -58,6 +87,8 @@ export function useStrategies() {
 
     return {
       address: strategyAddress,
+      name,
+      symbol,
       currentDebt: parseFloat(formatUnits(currentDebt, 6)),
       maxDebt: parseFloat(formatUnits(maxDebt, 6)),
       isActive: currentDebt > 0n || maxDebt > 0n,
@@ -67,6 +98,6 @@ export function useStrategies() {
   return {
     strategies,
     queue,
-    isLoading: loadingQueue || loadingStrategies,
+    isLoading: loadingQueue || loadingStrategies || loadingMetadata,
   }
 }
