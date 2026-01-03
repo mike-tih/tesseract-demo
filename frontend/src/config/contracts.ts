@@ -176,6 +176,36 @@ export const VAULT_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
+  {
+    inputs: [
+      { name: 'account', type: 'address' },
+      { name: 'role', type: 'uint256' }
+    ],
+    name: 'set_role',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'account', type: 'address' },
+      { name: 'role', type: 'uint256' }
+    ],
+    name: 'add_role',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'account', type: 'address' },
+      { name: 'role', type: 'uint256' }
+    ],
+    name: 'remove_role',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
   // Queue Management
   {
     inputs: [],
@@ -190,8 +220,35 @@ export const VAULT_ABI = [
 export const ROLES = {
   ADD_STRATEGY_MANAGER: 1n,
   REVOKE_STRATEGY_MANAGER: 2n,
-  DEBT_MANAGER: 64n,
+  FORCE_REVOKE_MANAGER: 4n,
+  ACCOUNTANT_MANAGER: 8n,
   QUEUE_MANAGER: 16n,
   REPORTING_MANAGER: 32n,
+  DEBT_MANAGER: 64n,
+  MAX_DEBT_MANAGER: 128n,
+  DEPOSIT_LIMIT_MANAGER: 256n,
+  WITHDRAW_LIMIT_MANAGER: 512n,
+  MINIMUM_IDLE_MANAGER: 1024n,
+  PROFIT_UNLOCK_MANAGER: 2048n,
+  DEBT_PURCHASER: 4096n,
+  EMERGENCY_MANAGER: 8192n,
   ALL: 16383n,
 } as const;
+
+export const ROLE_NAMES: Record<string, string> = {
+  '1': 'Add Strategy Manager',
+  '2': 'Revoke Strategy Manager',
+  '4': 'Force Revoke Manager',
+  '8': 'Accountant Manager',
+  '16': 'Queue Manager',
+  '32': 'Reporting Manager',
+  '64': 'Debt Manager',
+  '128': 'Max Debt Manager',
+  '256': 'Deposit Limit Manager',
+  '512': 'Withdraw Limit Manager',
+  '1024': 'Minimum Idle Manager',
+  '2048': 'Profit Unlock Manager',
+  '4096': 'Debt Purchaser',
+  '8192': 'Emergency Manager',
+  '16383': 'All Roles',
+};

@@ -5,6 +5,7 @@ import { VAULT_ABI } from '../config/contracts'
 import { useAdminRole } from '../hooks/useAdminRole'
 import { useStrategies } from '../hooks/useStrategies'
 import { useVaultData } from '../hooks/useVaultData'
+import { RoleManagement } from '../components/RoleManagement'
 
 export default function AdminPage() {
   const { address, isConnected } = useAccount()
@@ -13,7 +14,7 @@ export default function AdminPage() {
   const [targetDebt, setTargetDebt] = useState('')
 
   // Fetch admin status and data
-  const { isAdmin, canAddStrategy, canManageDebt, canManageQueue, isLoading: loadingRole, vaultAddress, chainId } = useAdminRole()
+  const { isAdmin, isRoleManager, canAddStrategy, canManageDebt, canManageQueue, isLoading: loadingRole, vaultAddress, chainId } = useAdminRole()
   const { strategies, queue, isLoading: loadingStrategies } = useStrategies()
   const { totalAssets } = useVaultData()
 
@@ -291,6 +292,11 @@ export default function AdminPage() {
             Note: Queue reordering UI can be implemented with drag-and-drop or input fields
           </p>
         </div>
+      )}
+
+      {/* Role Management - Only for role_manager */}
+      {isRoleManager && vaultAddress && (
+        <RoleManagement vaultAddress={vaultAddress} />
       )}
     </div>
   )
