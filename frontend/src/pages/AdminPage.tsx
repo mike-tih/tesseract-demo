@@ -20,12 +20,10 @@ export default function AdminPage() {
   // Contract writes
   const { writeContract: writeAddStrategy, data: addStrategyHash } = useWriteContract()
   const { writeContract: writeUpdateDebt, data: updateDebtHash } = useWriteContract()
-  const { writeContract: writeSetQueue, data: setQueueHash } = useWriteContract()
 
   // Transaction confirmations
   const { isLoading: isAddingStrategy } = useWaitForTransactionReceipt({ hash: addStrategyHash })
   const { isLoading: isUpdatingDebt } = useWaitForTransactionReceipt({ hash: updateDebtHash })
-  const { isLoading: isSettingQueue } = useWaitForTransactionReceipt({ hash: setQueueHash })
 
   const networkName = chainId === 1 ? 'Mainnet' : chainId === 11155111 ? 'Sepolia' : 'Unknown'
 

@@ -100,7 +100,7 @@ export default function UserPage() {
         address: vaultAddress,
         abi: VAULT_ABI,
         functionName: 'withdraw',
-        args: [parseUnits(withdrawAmount, 6), address, address, 0], // maxLoss = 0
+        args: [parseUnits(withdrawAmount, 6), address, address],
       })
     } catch (error) {
       console.error('Withdraw failed:', error)
@@ -235,10 +235,10 @@ export default function UserPage() {
           )}
           <div className="pt-4 border-t border-slate-700">
             <p className="text-sm text-slate-500">
-              Vault: {VAULT_ADDRESS || 'Not configured'}
+              Vault: {vaultAddress || 'Not configured'}
             </p>
             <p className="text-sm text-slate-500">
-              USDC: {USDC_ADDRESS}
+              USDC: {usdcAddress}
             </p>
           </div>
         </div>
