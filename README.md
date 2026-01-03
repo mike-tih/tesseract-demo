@@ -1,6 +1,24 @@
 # Tesseract Demo Vault
 
-ERC-4626 vault aggregator that accepts USDC and distributes capital across multiple Morpho USDC vaults. Built on Yearn V3 Vault (unmodified).
+ERC-4626 vault aggregator built on Yearn V3 that accepts USDC and distributes capital across multiple Morpho USDC vaults.
+
+> **Note**: This is a technical assessment project for Tesseract.
+
+## Live Deployment
+
+### Contracts
+
+**Ethereum Mainnet:**
+- Vault: [`0xB6D9171a325188AB0fECD756B8Cc2CEFf817336F`](https://etherscan.io/address/0xB6D9171a325188AB0fECD756B8Cc2CEFf817336F)
+- USDC: [`0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48`](https://etherscan.io/address/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)
+
+**Sepolia Testnet:**
+- Vault: [`0xCebA0ba1706931b5272EBB5eABE6E9453C462fB2`](https://sepolia.etherscan.io/address/0xCebA0ba1706931b5272EBB5eABE6E9453C462fB2)
+- USDC: [`0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`](https://sepolia.etherscan.io/address/0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238)
+
+### Live App
+
+[https://tesseract-demo-alpha.vercel.app/](https://tesseract-demo-alpha.vercel.app/)
 
 ## Project Structure
 
@@ -9,197 +27,174 @@ tesseract-demo/
 ├── contracts/          # Smart contracts (Hardhat + Vyper)
 │   ├── contracts/
 │   │   ├── interfaces/     # Solidity interfaces
-│   │   └── vendor/         # Yearn V3 Vault.vy
-│   ├── scripts/            # Deployment & configuration
-│   ├── artifacts/          # Compiled contracts
-│   └── README.md          # Contracts documentation
+│   │   └── vault/          # Yearn V3 Vault.vy
+│   └── scripts/            # Deployment scripts
 │
-└── frontend/          # React + TypeScript frontend
+└── frontend/          # React + TypeScript + wagmi
     ├── src/
     │   ├── pages/          # User & Admin pages
     │   ├── components/     # React components
     │   ├── hooks/          # Custom hooks
-    │   └── config/         # wagmi & contract config
-    └── README.md          # Frontend documentation
+    │   └── config/         # Contract ABIs & config
+    └── public/
 ```
-
-## Quick Start
-
-### Contracts
-
-```bash
-cd contracts
-
-# 1. Install dependencies
-npm install
-
-# 2. Configure environment
-cp .env.example .env
-# Edit .env with your settings
-
-# 3. Compile Yearn V3 Vault
-npm run compile:vault
-
-# 4. Deploy vault
-npm run deploy:sepolia
-
-# 5. Configure strategies
-npm run configure:sepolia
-```
-
-**See [`contracts/README.md`](./contracts/README.md) for detailed instructions.**
-
-### Frontend
-
-```bash
-cd frontend
-
-# 1. Install dependencies
-npm install
-
-# 2. Configure environment
-cp .env.example .env
-# Edit .env with deployed vault address
-
-# 3. Run development server
-npm run dev
-```
-
-**See [`frontend/README.md`](./frontend/README.md) for detailed instructions.**
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                              USER FLOW                                  │
-└─────────────────────────────────────────────────────────────────────────┘
-
-    User (USDC)
-        │
-        ▼
-┌───────────────────┐
-│   Yield Index     │  ← Yearn V3 Vault (unmodified)
-│   Vault (ERC-4626)│  ← Accepts USDC, issues shares
-└───────────────────┘
-        │
-        │ Admin: addStrategy(), updateDebt()
-        ▼
-┌───────────────────────────────────────────────────────────────────────┐
-│                    STRATEGIES (ERC-4626 Vaults)                        │
-├─────────────────┬─────────────────┬─────────────────┬─────────────────┤
-│  Strategy 1     │  Strategy 2     │  Strategy 3     │  Strategy 4     │
-│  (USDC market)  │  (USDC market)  │  (USDC market)  │  (USDC market)  │
-│  e.g. MetaMorpho│  e.g. MetaMorpho│  e.g. MetaMorpho│  e.g. MetaMorpho│
-└─────────────────┴─────────────────┴─────────────────┴─────────────────┘
+User (USDC) → Tesseract Vault (ERC-4626) → Strategies (MetaMorpho Vaults)
+                     ↓
+              Vault Shares (TDV)
 ```
 
-## Key Features
+**Key Components:**
+- **Yearn V3 Vault** - Unmodified, battle-tested vault implementation
+- **ERC-4626** - Standard vault interface for deposits/withdrawals
+- **Multi-Strategy** - Distribute capital across multiple Morpho vaults
+- **Role-Based Access** - Granular permissions for strategy management
+- **Web Dashboard** - React frontend for users and admins
 
-✅ **ERC-4626 Compliant** - Standard vault interface
-✅ **Multi-Strategy** - Distribute capital across 4 strategies
-✅ **Yearn V3 Base** - Battle-tested, audited vault
-✅ **No Router Needed** - Vault handles rebalancing internally
-✅ **Granular Roles** - 14 role types for access control
-✅ **Admin Dashboard** - Web UI for strategy management
+## Features
 
-## User Flow
+**User Features:**
+- Deposit USDC, receive vault shares (TDV)
+- Withdraw USDC by burning shares
+- View strategy breakdown and allocation
+- Real-time vault statistics
 
-### Deposit
-1. User approves USDC to vault
-2. User calls `deposit(amount, receiver)`
-3. Vault mints shares to user
-4. Admin allocates capital via `updateDebt(strategy, amount)`
+**Admin Features:**
+- Add/remove strategies
+- Set max debt per strategy
+- Rebalance capital allocation
+- Manage deposit limits
+- Role management (14 role types)
 
-### Withdraw
-1. User calls `withdraw(assets, receiver, owner)`
-2. Vault pulls funds from strategies (via withdraw queue)
-3. Vault burns shares and returns USDC
+## Strategy Implementation
 
-### Admin Rebalance
-1. View current allocations in admin panel
-2. Adjust debt per strategy
-3. Call `updateDebt()` for each strategy
-4. Vault handles transfers automatically
+**Strategy A — Morpho USDC Vaults:** ✅ Implemented
+- Direct ERC-4626 integration with MetaMorpho vaults
+- Native USDC deposits, no conversion needed
+
+**Strategy B — PYUSD Vault on Euler:** Requires wrapper contract
+- Would need custom ERC-4626 wrapper contract as intermediary layer
+- Handles USDC → PYUSD conversion before depositing to Euler
+- Additional considerations: incentive rewards claiming, valuation oracles, manipulation risks
+
+## Quick Start
+
+### 1. Contracts Setup
+
+```bash
+cd contracts
+
+# Install dependencies
+npm install
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your RPC URL and private key
+
+# Compile Yearn V3 Vault
+npm run compile:vault
+
+# Deploy to Sepolia testnet
+npm run deploy:sepolia
+
+# Configure strategies (optional)
+npm run configure:sepolia
+```
+
+### 2. Frontend Setup
+
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Configure environment
+cp .env.example .env
+# Edit .env with deployed vault address
+
+# Run development server
+npm run dev
+```
+
+Visit `http://localhost:5173`
+
+## Deployment
+
+### Deploy Vault Contract
+
+```bash
+cd contracts
+
+# Deploy to Sepolia
+npm run deploy:sepolia
+
+# Deploy to Mainnet
+npm run deploy:mainnet
+```
+
+The deployment script will:
+1. Deploy Yearn V3 Vault with USDC as asset
+2. Set admin address
+3. Output vault address
+
+### Deploy Frontend
+
+```bash
+cd frontend
+
+# Build for production
+npm run build
+
+# Preview build
+npm run preview
+```
+
+Deploy `dist/` folder to Vercel, Netlify, or any static hosting.
 
 ## Configuration
 
 ### Environment Variables
 
-Both `contracts/` and `frontend/` need `.env` files:
+**Contracts (`contracts/.env`):**
+```env
+MAINNET_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY
+PRIVATE_KEY=your_private_key
+ADMIN_ADDRESS=0x...
+MAINNET_USDC_ADDRESS=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+```
+
+**Frontend (`frontend/.env`):**
+```env
+VITE_WALLET_CONNECT_ID=your_walletconnect_project_id
+VITE_MAINNET_VAULT_ADDRESS=0x...
+VITE_MAINNET_USDC_ADDRESS=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+```
+
+## Tech Stack
 
 **Contracts:**
-```env
-MAINNET_RPC_URL=...
-SEPOLIA_RPC_URL=...
-PRIVATE_KEY=...
-USDC_ADDRESS=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
-ADMIN_ADDRESS=0x...
-STRATEGY_1=0x...  # ERC-4626 vault address
-STRATEGY_2=0x...
-STRATEGY_3=0x...
-STRATEGY_4=0x...
-```
+- Vyper 0.3.10 (Yearn V3 Vault)
+- Hardhat (deployment framework)
+- Solidity 0.8.x (interfaces)
 
 **Frontend:**
-```env
-VITE_WALLET_CONNECT_ID=...
-VITE_VAULT_ADDRESS=...  # From deployment
-VITE_USDC_ADDRESS=...
-```
-
-## Deployment Checklist
-
-- [ ] Configure `.env` in `contracts/`
-- [ ] Find/deploy Yearn V3 VaultFactory (or use existing)
-- [ ] Select 4 ERC-4626 USDC strategies (e.g., MetaMorpho vaults)
-- [ ] Run `npm run compile:vault` in `contracts/`
-- [ ] Run `npm run deploy:sepolia` to test on Sepolia
-- [ ] Run `npm run configure:sepolia` to add strategies
-- [ ] Test deposit/withdraw on Sepolia
-- [ ] Deploy to mainnet when ready
-- [ ] Configure frontend `.env` with vault address
-- [ ] Deploy frontend to Vercel/Netlify
-
-## Security
-
-- ⚠️ Vault contract is **unmodified Yearn V3** (audited)
-- ⚠️ Strategies must be **trusted and ERC-4626 compliant**
-- ⚠️ Admin has **full control** over capital allocation
-- ⚠️ Use **multisig** for admin address in production
-- ⚠️ Test thoroughly on **testnet** before mainnet
+- React 18 + TypeScript
+- Vite (build tool)
+- wagmi v2 + viem (Ethereum interactions)
+- RainbowKit (wallet connection)
+- TailwindCSS (styling)
 
 ## Resources
 
-- [Yearn V3 Docs](https://docs.yearn.fi/developers/v3/overview)
+- [Yearn V3 Documentation](https://docs.yearn.fi/developers/v3/overview)
 - [Yearn V3 GitHub](https://github.com/yearn/yearn-vaults-v3)
 - [ERC-4626 Standard](https://eips.ethereum.org/EIPS/eip-4626)
-- [Morpho Docs](https://docs.morpho.blue)
-- [wagmi Docs](https://wagmi.sh)
-- [RainbowKit Docs](https://www.rainbowkit.com)
-
-## Next Steps
-
-1. **Complete Frontend Setup**:
-   - Copy config files from plan (vite.config.ts, tailwind.config.ts, etc.)
-   - Implement User page components
-   - Implement Admin page components
-   - See `/frontend/README.md` for detailed instructions
-
-2. **Find Strategy Addresses**:
-   - Research MetaMorpho USDC vaults on Sepolia/Mainnet
-   - Verify ERC-4626 compliance
-   - Add addresses to `.env`
-
-3. **Test Deployment**:
-   - Deploy on Sepolia testnet
-   - Test all user flows
-   - Test admin operations
-
-4. **Production Deployment**:
-   - Deploy on Ethereum mainnet
-   - Verify contracts on Etherscan
-   - Set up multisig for admin
-   - Deploy frontend
+- [Morpho Documentation](https://docs.morpho.blue)
+- [wagmi Documentation](https://wagmi.sh)
 
 ## License
 

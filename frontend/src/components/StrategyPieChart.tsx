@@ -68,14 +68,11 @@ export function StrategyPieChart({ strategies, totalAssets }: StrategyPieChartPr
   const center = size / 2
   const radius = size / 2 - 10
 
-  let currentAngle = -90 // Start from top
-
-  const paths = slices.map((slice) => {
+  const paths = slices.reduce<Array<typeof slices[0] & { path: string }>>((acc, slice, index) => {
+    // Calculate start angle based on previous slices
+    const startAngle = index === 0 ? -90 : acc.reduce((sum, prev) => sum + (prev.percentage / 100) * 360, -90)
     const angleSize = (slice.percentage / 100) * 360
-    const startAngle = currentAngle
-    const endAngle = currentAngle + angleSize
-
-    currentAngle = endAngle
+    const endAngle = startAngle + angleSize
 
     // Convert angles to radians
     const startRad = (startAngle * Math.PI) / 180
@@ -98,8 +95,8 @@ export function StrategyPieChart({ strategies, totalAssets }: StrategyPieChartPr
       'Z',
     ].join(' ')
 
-    return { ...slice, path }
-  })
+    return [...acc, { ...slice, path }]
+  }, [])
 
   return (
     <div className="space-y-4">
