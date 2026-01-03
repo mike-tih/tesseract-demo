@@ -6,6 +6,7 @@ import { getVaultAddress, getUsdcAddress, VAULT_ABI, ERC20_ABI } from '../config
 import { useVaultData } from '../hooks/useVaultData'
 import { useUserPosition } from '../hooks/useUserPosition'
 import { useStrategies } from '../hooks/useStrategies'
+import { StrategyPieChart } from '../components/StrategyPieChart'
 
 export default function UserPage() {
   const { address, isConnected } = useAccount()
@@ -142,6 +143,8 @@ export default function UserPage() {
                   placeholder="0.00"
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
+                  step="0.000001"
+                  min="0"
                 />
                 <button
                   className="btn-secondary px-4"
@@ -195,6 +198,8 @@ export default function UserPage() {
                   placeholder="0.00"
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
+                  step="0.000001"
+                  min="0"
                 />
                 <button
                   className="btn-secondary px-4"
@@ -237,40 +242,48 @@ export default function UserPage() {
           ) : strategies.length === 0 ? (
             <p className="text-slate-400">No strategies configured yet</p>
           ) : (
-            <div className="space-y-3">
-              {strategies.map((strategy, idx) => {
-                const percentage = totalAssets > 0 ? (strategy.currentDebt / totalAssets) * 100 : 0
-                const morphoUrl = `https://app.morpho.org/ethereum/vault/${strategy.address}`
-                return (
-                  <div key={strategy.address} className="p-4 bg-slate-700/50 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex-1">
-                        <p className="font-semibold">{strategy.name}</p>
-                        {strategy.symbol && (
-                          <p className="text-xs text-slate-500">{strategy.symbol}</p>
-                        )}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-2">
+                {strategies.map((strategy) => {
+                  const percentage = totalAssets > 0 ? (strategy.currentDebt / totalAssets) * 100 : 0
+                  const morphoUrl = `https://app.morpho.org/ethereum/vault/${strategy.address}`
+                  return (
+                    <div key={strategy.address} className="p-2.5 bg-slate-700/50 rounded-lg">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate">
+                            {strategy.name}
+                            {strategy.symbol && <span className="text-xs text-slate-500 ml-1">({strategy.symbol})</span>}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 ml-2 whitespace-nowrap text-sm">
+                          <span className="text-slate-300">
+                            {strategy.currentDebt.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} USDC
+                          </span>
+                          <span className="text-slate-500">|</span>
+                          <span className="text-vault-blue font-semibold">{percentage.toFixed(1)}%</span>
+                        </div>
                       </div>
-                      <p className="text-vault-blue">{percentage.toFixed(1)}%</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-slate-500 font-mono truncate flex-1">
+                          {strategy.address}
+                        </p>
+                        <a
+                          href={morphoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-vault-blue hover:text-vault-blue/80 whitespace-nowrap"
+                        >
+                          Morpho ↗
+                        </a>
+                      </div>
                     </div>
-                    <p className="text-sm text-slate-400 mb-2">
-                      Current Debt: ${strategy.currentDebt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-slate-500 font-mono break-all flex-1">
-                        {strategy.address}
-                      </p>
-                      <a
-                        href={morphoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-vault-blue hover:text-vault-blue/80 whitespace-nowrap"
-                      >
-                        View on Morpho ↗
-                      </a>
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
+              <div className="flex items-start justify-center">
+                <StrategyPieChart strategies={strategies} totalAssets={totalAssets} />
+              </div>
             </div>
           )}
           <div className="pt-4 border-t border-slate-700">

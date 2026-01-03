@@ -6,11 +6,14 @@ import { useAdminRole } from '../hooks/useAdminRole'
 import { useStrategies } from '../hooks/useStrategies'
 import { useVaultData } from '../hooks/useVaultData'
 import { RoleManagement } from '../components/RoleManagement'
+import { StrategyPieChart } from '../components/StrategyPieChart'
 
 export default function AdminPage() {
   const { address, isConnected } = useAccount()
   const [newStrategyAddress, setNewStrategyAddress] = useState('')
   const [newDepositLimit, setNewDepositLimit] = useState('')
+  const [selectedStrategy, setSelectedStrategy] = useState('')
+  const [targetDebt, setTargetDebt] = useState('')
 
   // Fetch admin status and data
   const { isAdmin, isRoleManager, canAddStrategy, canManageDebt, canManageQueue, isLoading: loadingRole, vaultAddress, chainId, roles } = useAdminRole()
@@ -145,6 +148,22 @@ export default function AdminPage() {
     }
   }
 
+  const handleUpdateDebt = async () => {
+    if (!selectedStrategy || !targetDebt || !canManageDebt || !vaultAddress) return
+
+    try {
+      writeUpdateDebt({
+        address: vaultAddress,
+        abi: VAULT_ABI,
+        functionName: 'update_debt',
+        args: [selectedStrategy as `0x${string}`, parseUnits(targetDebt, 6)],
+      })
+      setTargetDebt('')
+    } catch (error) {
+      console.error('Update debt failed:', error)
+    }
+  }
+
   const handleEqualAllocation = async () => {
     if (strategies.length === 0 || !canManageDebt || totalAssets === 0 || !vaultAddress) return
 
@@ -226,19 +245,82 @@ export default function AdminPage() {
       </div>
 
       {/* Rebalance Capital */}
-      {canManageDebt && totalIdle > 0 && strategies.length > 0 && (
+      {canManageDebt && (
         <div className="card">
           <h2 className="text-2xl font-bold mb-6">Rebalance Capital</h2>
-          <button
-            className="btn-primary w-full"
-            onClick={handleEqualAllocation}
-            disabled={isUpdatingDebt}
-          >
-            {isUpdatingDebt ? 'Allocating...' : `Allocate Equally (${(100 / strategies.length).toFixed(1)}% each)`}
-          </button>
-          <p className="text-xs text-slate-400 mt-2 text-center">
-            💡 Idle funds earn no yield. Allocate to strategies to start earning.
-          </p>
+
+          {strategies.length === 0 ? (
+            <p className="text-slate-400">Add strategies first to enable allocation</p>
+          ) : (
+            <div className="space-y-6">
+              {/* Manual Allocation */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Allocate to Specific Strategy</h3>
+                <div className="flex gap-2 mb-2">
+                  <select
+                    className="input flex-1"
+                    value={selectedStrategy}
+                    onChange={(e) => setSelectedStrategy(e.target.value)}
+                  >
+                    <option value="">Select Strategy</option>
+                    {strategies.map((strategy) => (
+                      <option key={strategy.address} value={strategy.address}>
+                        {strategy.name} ({strategy.symbol})
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    className="input w-48"
+                    placeholder="Amount (USDC)"
+                    value={targetDebt}
+                    onChange={(e) => setTargetDebt(e.target.value)}
+                    step="0.000001"
+                    min="0"
+                  />
+                  <button
+                    className="btn-primary"
+                    onClick={handleUpdateDebt}
+                    disabled={!selectedStrategy || !targetDebt || isUpdatingDebt}
+                  >
+                    {isUpdatingDebt ? 'Updating...' : 'Set Debt'}
+                  </button>
+                </div>
+                {selectedStrategy && targetDebt && (() => {
+                  const strategy = strategies.find(s => s.address === selectedStrategy)
+                  const targetAmount = parseFloat(targetDebt)
+                  if (strategy && targetAmount > strategy.maxDebt) {
+                    return (
+                      <p className="text-xs text-warning mb-2">
+                        ⚠️ Target debt ({targetAmount.toFixed(2)} USDC) exceeds max debt ({strategy.maxDebt.toFixed(2)} USDC)
+                      </p>
+                    )
+                  }
+                  return null
+                })()}
+                <p className="text-xs text-slate-400">
+                  💡 <strong>Target Debt</strong> - amount of USDC to allocate to the selected strategy. Must be ≤ Max Debt.
+                </p>
+              </div>
+
+              {/* Equal Allocation */}
+              {totalIdle > 0 && (
+                <div className="pt-4 border-t border-slate-700">
+                  <h3 className="text-lg font-semibold mb-3">Quick Allocation</h3>
+                  <button
+                    className="btn-primary w-full"
+                    onClick={handleEqualAllocation}
+                    disabled={isUpdatingDebt}
+                  >
+                    {isUpdatingDebt ? 'Allocating...' : `Allocate Equally (${(100 / strategies.length).toFixed(1)}% each)`}
+                  </button>
+                  <p className="text-xs text-slate-400 mt-2 text-center">
+                    💡 Idle funds earn no yield. Allocate to strategies to start earning.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -278,89 +360,89 @@ export default function AdminPage() {
             ) : strategies.length === 0 ? (
               <div className="text-slate-400">No strategies configured yet</div>
             ) : (
-              <div className="space-y-2">
-                {strategies.map((strategy, idx) => {
-                  const percentage = totalAssets > 0 ? (strategy.currentDebt / totalAssets) * 100 : 0
-                  const morphoUrl = `https://app.morpho.org/ethereum/vault/${strategy.address}`
-                  return (
-                    <div key={strategy.address} className="p-4 bg-slate-700/50 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex-1">
-                          <p className="font-semibold">{strategy.name}</p>
-                          {strategy.symbol && (
-                            <p className="text-xs text-slate-500">{strategy.symbol}</p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <p className="text-vault-blue">{percentage.toFixed(1)}%</p>
-                          {strategy.isActive && (
-                            <span className="text-xs px-2 py-1 bg-success/20 text-success rounded">
-                              Active
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-2">
+                  {strategies.map((strategy) => {
+                    const percentage = totalAssets > 0 ? (strategy.currentDebt / totalAssets) * 100 : 0
+                    const morphoUrl = `https://app.morpho.org/ethereum/vault/${strategy.address}`
+                    return (
+                      <div key={strategy.address} className="p-2.5 bg-slate-700/50 rounded-lg">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm truncate">
+                              {strategy.name}
+                              {strategy.symbol && <span className="text-xs text-slate-500 ml-1">({strategy.symbol})</span>}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 ml-2 whitespace-nowrap text-sm">
+                            <span className="text-slate-300">
+                              {strategy.currentDebt.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} USDC
                             </span>
-                          )}
+                            <span className="text-slate-500">|</span>
+                            <span className="text-vault-blue font-semibold">{percentage.toFixed(1)}%</span>
+                            {strategy.isActive && (
+                              <span className="text-xs px-1.5 py-0.5 bg-success/20 text-success rounded ml-1">
+                                Active
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 mb-2">
-                        <div>
-                          <p className="text-xs text-slate-500">Current Debt</p>
-                          <p className="text-sm font-semibold">
-                            ${strategy.currentDebt.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-500">Max Debt</p>
-                          <p className="text-sm font-semibold">
-                            ${strategy.maxDebt.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                          </p>
+                        <div className="flex items-center gap-2 mb-1 text-xs">
+                          <span className="text-slate-500">Max: {strategy.maxDebt.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} USDC</span>
                           {strategy.maxDebt === 0 && (
-                            <p className="text-xs text-warning mt-1">⚠️ Set max debt to enable allocation</p>
+                            <span className="text-warning">⚠️ Set max debt</span>
                           )}
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <p className="text-xs text-slate-500 font-mono break-all flex-1">
-                          {strategy.address}
-                        </p>
-                        <a
-                          href={morphoUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-vault-blue hover:text-vault-blue/80 whitespace-nowrap"
-                        >
-                          Morpho ↗
-                        </a>
-                      </div>
-                      {canManageDebt && (
-                        <div className="flex gap-2 mt-2 pt-2 border-t border-slate-600">
-                          <input
-                            type="number"
-                            className="input flex-1 text-sm"
-                            placeholder="Max Debt (USDC)"
-                            id={`maxdebt-${strategy.address}`}
-                          />
-                          <button
-                            className="btn-secondary text-sm px-3"
-                            onClick={() => {
-                              const input = document.getElementById(`maxdebt-${strategy.address}`) as HTMLInputElement
-                              if (input && input.value && parseFloat(input.value) > 0) {
-                                writeUpdateDebt({
-                                  address: vaultAddress,
-                                  abi: VAULT_ABI,
-                                  functionName: 'update_max_debt_for_strategy',
-                                  args: [strategy.address as `0x${string}`, parseUnits(input.value, 6)],
-                                })
-                                input.value = ''
-                              }
-                            }}
-                            disabled={isUpdatingDebt}
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-xs text-slate-500 font-mono truncate flex-1">
+                            {strategy.address}
+                          </p>
+                          <a
+                            href={morphoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-vault-blue hover:text-vault-blue/80 whitespace-nowrap"
                           >
-                            Set Max Debt
-                          </button>
+                            Morpho ↗
+                          </a>
                         </div>
-                      )}
-                    </div>
-                  )
-                })}
+                        {canManageDebt && (
+                          <div className="flex gap-2 mt-1.5 pt-1.5 border-t border-slate-600">
+                            <input
+                              type="number"
+                              className="input flex-1 text-xs py-1"
+                              placeholder="Max Debt (USDC)"
+                              id={`maxdebt-${strategy.address}`}
+                              step="0.000001"
+                              min="0"
+                            />
+                            <button
+                              className="btn-secondary text-xs px-2 py-1"
+                              onClick={() => {
+                                const input = document.getElementById(`maxdebt-${strategy.address}`) as HTMLInputElement
+                                if (input && input.value && parseFloat(input.value) > 0) {
+                                  writeUpdateDebt({
+                                    address: vaultAddress,
+                                    abi: VAULT_ABI,
+                                    functionName: 'update_max_debt_for_strategy',
+                                    args: [strategy.address as `0x${string}`, parseUnits(input.value, 6)],
+                                  })
+                                  input.value = ''
+                                }
+                              }}
+                              disabled={isUpdatingDebt}
+                            >
+                              Set Max
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="flex items-start justify-center">
+                  <StrategyPieChart strategies={strategies} totalAssets={totalAssets} />
+                </div>
               </div>
             )}
           </div>
@@ -420,6 +502,8 @@ export default function AdminPage() {
                   placeholder="0.00 USDC"
                   value={newDepositLimit}
                   onChange={(e) => setNewDepositLimit(e.target.value)}
+                  step="0.000001"
+                  min="0"
                 />
                 <button
                   className="btn-primary"
