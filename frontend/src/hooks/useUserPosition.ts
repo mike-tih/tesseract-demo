@@ -1,54 +1,57 @@
-import { useAccount, useReadContract } from 'wagmi'
-import { VAULT_ADDRESS, VAULT_ABI, USDC_ADDRESS, ERC20_ABI } from '../config/contracts'
+import { useAccount, useReadContract, useChainId } from 'wagmi'
+import { getVaultAddress, getUsdcAddress, VAULT_ABI, ERC20_ABI } from '../config/contracts'
 import { formatUnits } from 'viem'
 
 export function useUserPosition() {
   const { address, isConnected } = useAccount()
+  const chainId = useChainId()
+  const vaultAddress = getVaultAddress(chainId)
+  const usdcAddress = getUsdcAddress(chainId)
 
   // User's share balance in the vault
   const { data: shares, isLoading: loadingShares } = useReadContract({
-    address: VAULT_ADDRESS as `0x${string}`,
+    address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address && isConnected,
+      enabled: !!address && isConnected && !!vaultAddress,
       refetchInterval: 10000,
     },
   })
 
   // Convert shares to assets (USDC value)
   const { data: assets, isLoading: loadingAssets } = useReadContract({
-    address: VAULT_ADDRESS as `0x${string}`,
+    address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'convertToAssets',
     args: shares ? [shares] : [0n],
     query: {
-      enabled: !!shares,
+      enabled: !!shares && !!vaultAddress,
       refetchInterval: 10000,
     },
   })
 
   // User's USDC balance
   const { data: usdcBalance, isLoading: loadingUsdcBalance } = useReadContract({
-    address: USDC_ADDRESS as `0x${string}`,
+    address: usdcAddress,
     abi: ERC20_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address && isConnected,
+      enabled: !!address && isConnected && !!usdcAddress,
       refetchInterval: 10000,
     },
   })
 
   // User's USDC allowance for the vault
   const { data: allowance, isLoading: loadingAllowance } = useReadContract({
-    address: USDC_ADDRESS as `0x${string}`,
+    address: usdcAddress,
     abi: ERC20_ABI,
     functionName: 'allowance',
-    args: address && VAULT_ADDRESS ? [address, VAULT_ADDRESS] : undefined,
+    args: address && vaultAddress ? [address, vaultAddress] : undefined,
     query: {
-      enabled: !!address && isConnected && !!VAULT_ADDRESS,
+      enabled: !!address && isConnected && !!vaultAddress && !!usdcAddress,
       refetchInterval: 10000,
     },
   })

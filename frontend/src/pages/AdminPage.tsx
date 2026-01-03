@@ -1,7 +1,7 @@
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { useState } from 'react'
 import { parseUnits } from 'viem'
-import { VAULT_ADDRESS, VAULT_ABI } from '../config/contracts'
+import { VAULT_ABI } from '../config/contracts'
 import { useAdminRole } from '../hooks/useAdminRole'
 import { useStrategies } from '../hooks/useStrategies'
 import { useVaultData } from '../hooks/useVaultData'
@@ -13,7 +13,7 @@ export default function AdminPage() {
   const [targetDebt, setTargetDebt] = useState('')
 
   // Fetch admin status and data
-  const { isAdmin, canAddStrategy, canManageDebt, canManageQueue, isLoading: loadingRole } = useAdminRole()
+  const { isAdmin, canAddStrategy, canManageDebt, canManageQueue, isLoading: loadingRole, vaultAddress, chainId } = useAdminRole()
   const { strategies, queue, isLoading: loadingStrategies } = useStrategies()
   const { totalAssets } = useVaultData()
 
@@ -27,6 +27,8 @@ export default function AdminPage() {
   const { isLoading: isUpdatingDebt } = useWaitForTransactionReceipt({ hash: updateDebtHash })
   const { isLoading: isSettingQueue } = useWaitForTransactionReceipt({ hash: setQueueHash })
 
+  const networkName = chainId === 1 ? 'Mainnet' : chainId === 11155111 ? 'Sepolia' : 'Unknown'
+
   if (!isConnected) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -34,6 +36,24 @@ export default function AdminPage() {
           <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>
           <p className="text-slate-400">
             Please connect your wallet to access the admin panel
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!vaultAddress) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="card bg-error/10 border-error/30 text-center max-w-md">
+          <h2 className="text-2xl font-bold text-error mb-4">⚠️ Configuration Error</h2>
+          <p className="text-slate-400 mb-4">
+            Vault address is not configured for <strong>{networkName}</strong>
+          </p>
+          <p className="text-sm text-slate-500">
+            Please add <code className="bg-slate-700 px-2 py-1 rounded">
+              VITE_{networkName.toUpperCase()}_VAULT_ADDRESS
+            </code> to your .env file
           </p>
         </div>
       </div>
@@ -70,11 +90,11 @@ export default function AdminPage() {
   }
 
   const handleAddStrategy = async () => {
-    if (!newStrategyAddress || !canAddStrategy) return
+    if (!newStrategyAddress || !canAddStrategy || !vaultAddress) return
 
     try {
       writeAddStrategy({
-        address: VAULT_ADDRESS as `0x${string}`,
+        address: vaultAddress,
         abi: VAULT_ABI,
         functionName: 'add_strategy',
         args: [newStrategyAddress as `0x${string}`],
@@ -86,11 +106,11 @@ export default function AdminPage() {
   }
 
   const handleUpdateDebt = async () => {
-    if (!selectedStrategy || !targetDebt || !canManageDebt) return
+    if (!selectedStrategy || !targetDebt || !canManageDebt || !vaultAddress) return
 
     try {
       writeUpdateDebt({
-        address: VAULT_ADDRESS as `0x${string}`,
+        address: vaultAddress,
         abi: VAULT_ABI,
         functionName: 'update_debt',
         args: [selectedStrategy as `0x${string}`, parseUnits(targetDebt, 6)],
@@ -102,7 +122,7 @@ export default function AdminPage() {
   }
 
   const handleEqualAllocation = async () => {
-    if (strategies.length === 0 || !canManageDebt || totalAssets === 0) return
+    if (strategies.length === 0 || !canManageDebt || totalAssets === 0 || !vaultAddress) return
 
     const equalDebt = totalAssets / strategies.length
 
@@ -110,7 +130,7 @@ export default function AdminPage() {
     try {
       for (const strategy of strategies) {
         await writeUpdateDebt({
-          address: VAULT_ADDRESS as `0x${string}`,
+          address: vaultAddress,
           abi: VAULT_ABI,
           functionName: 'update_debt',
           args: [strategy.address as `0x${string}`, parseUnits(equalDebt.toString(), 6)],

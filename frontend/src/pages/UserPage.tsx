@@ -1,13 +1,16 @@
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi'
 import { useState } from 'react'
 import { parseUnits } from 'viem'
-import { VAULT_ADDRESS, USDC_ADDRESS, VAULT_ABI, ERC20_ABI } from '../config/contracts'
+import { getVaultAddress, getUsdcAddress, VAULT_ABI, ERC20_ABI } from '../config/contracts'
 import { useVaultData } from '../hooks/useVaultData'
 import { useUserPosition } from '../hooks/useUserPosition'
 import { useStrategies } from '../hooks/useStrategies'
 
 export default function UserPage() {
   const { address, isConnected } = useAccount()
+  const chainId = useChainId()
+  const vaultAddress = getVaultAddress(chainId)
+  const usdcAddress = getUsdcAddress(chainId)
   const [depositAmount, setDepositAmount] = useState('')
   const [withdrawAmount, setWithdrawAmount] = useState('')
 
@@ -26,6 +29,8 @@ export default function UserPage() {
   const { isLoading: isDepositing } = useWaitForTransactionReceipt({ hash: depositHash })
   const { isLoading: isWithdrawing } = useWaitForTransactionReceipt({ hash: withdrawHash })
 
+  const networkName = chainId === 1 ? 'Mainnet' : chainId === 11155111 ? 'Sepolia' : 'Unknown'
+
   if (!isConnected) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -39,15 +44,33 @@ export default function UserPage() {
     )
   }
 
+  if (!vaultAddress || !usdcAddress) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="card bg-error/10 border-error/30 text-center max-w-md">
+          <h2 className="text-2xl font-bold text-error mb-4">⚠️ Configuration Error</h2>
+          <p className="text-slate-400 mb-4">
+            Vault address is not configured for <strong>{networkName}</strong>
+          </p>
+          <p className="text-sm text-slate-500">
+            Please add <code className="bg-slate-700 px-2 py-1 rounded">
+              VITE_{networkName.toUpperCase()}_VAULT_ADDRESS
+            </code> to your .env file
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   const handleApprove = async () => {
-    if (!depositAmount || parseFloat(depositAmount) <= 0) return
+    if (!depositAmount || parseFloat(depositAmount) <= 0 || !vaultAddress || !usdcAddress) return
 
     try {
       writeApprove({
-        address: USDC_ADDRESS as `0x${string}`,
+        address: usdcAddress,
         abi: ERC20_ABI,
         functionName: 'approve',
-        args: [VAULT_ADDRESS, parseUnits(depositAmount, 6)],
+        args: [vaultAddress, parseUnits(depositAmount, 6)],
       })
     } catch (error) {
       console.error('Approval failed:', error)
@@ -55,11 +78,11 @@ export default function UserPage() {
   }
 
   const handleDeposit = async () => {
-    if (!depositAmount || parseFloat(depositAmount) <= 0 || !address) return
+    if (!depositAmount || parseFloat(depositAmount) <= 0 || !address || !vaultAddress) return
 
     try {
       writeDeposit({
-        address: VAULT_ADDRESS as `0x${string}`,
+        address: vaultAddress,
         abi: VAULT_ABI,
         functionName: 'deposit',
         args: [parseUnits(depositAmount, 6), address],
@@ -70,11 +93,11 @@ export default function UserPage() {
   }
 
   const handleWithdraw = async () => {
-    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0 || !address) return
+    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0 || !address || !vaultAddress) return
 
     try {
       writeWithdraw({
-        address: VAULT_ADDRESS as `0x${string}`,
+        address: vaultAddress,
         abi: VAULT_ABI,
         functionName: 'withdraw',
         args: [parseUnits(withdrawAmount, 6), address, address, 0], // maxLoss = 0

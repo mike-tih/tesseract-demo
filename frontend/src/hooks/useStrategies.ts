@@ -1,5 +1,5 @@
-import { useReadContract } from 'wagmi'
-import { VAULT_ADDRESS, VAULT_ABI } from '../config/contracts'
+import { useReadContract, useChainId } from 'wagmi'
+import { getVaultAddress, VAULT_ABI } from '../config/contracts'
 import { formatUnits } from 'viem'
 
 export interface StrategyInfo {
@@ -10,12 +10,16 @@ export interface StrategyInfo {
 }
 
 export function useStrategies() {
+  const chainId = useChainId()
+  const vaultAddress = getVaultAddress(chainId)
+
   // Get the default queue (list of strategy addresses)
   const { data: queueData, isLoading: loadingQueue } = useReadContract({
-    address: VAULT_ADDRESS as `0x${string}`,
+    address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'get_default_queue',
     query: {
+      enabled: !!vaultAddress,
       refetchInterval: 30000,
     },
   })
@@ -27,11 +31,12 @@ export function useStrategies() {
   const strategies: StrategyInfo[] = queue.map((strategyAddress) => {
     // Get strategy params (returns struct with current_debt, max_debt, etc)
     const { data: strategyData } = useReadContract({
-      address: VAULT_ADDRESS as `0x${string}`,
+      address: vaultAddress,
       abi: VAULT_ABI,
       functionName: 'strategies',
       args: [strategyAddress],
       query: {
+        enabled: !!vaultAddress,
         refetchInterval: 30000,
       },
     })

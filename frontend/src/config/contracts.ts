@@ -1,6 +1,25 @@
-// Contract addresses from environment variables
-export const VAULT_ADDRESS = (import.meta.env.VITE_VAULT_ADDRESS || '') as `0x${string}`;
-export const USDC_ADDRESS = (import.meta.env.VITE_USDC_ADDRESS || '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48') as `0x${string}`;
+// Contract addresses per network
+const MAINNET_VAULT = import.meta.env.VITE_MAINNET_VAULT_ADDRESS || '';
+const SEPOLIA_VAULT = import.meta.env.VITE_SEPOLIA_VAULT_ADDRESS || '';
+const MAINNET_USDC = import.meta.env.VITE_MAINNET_USDC_ADDRESS || '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
+const SEPOLIA_USDC = import.meta.env.VITE_SEPOLIA_USDC_ADDRESS || '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238';
+
+// Helper to get contract address based on chain ID
+export function getVaultAddress(chainId: number): `0x${string}` {
+  if (chainId === 1) return MAINNET_VAULT as `0x${string}`;
+  if (chainId === 11155111) return SEPOLIA_VAULT as `0x${string}`;
+  return '' as `0x${string}`;
+}
+
+export function getUsdcAddress(chainId: number): `0x${string}` {
+  if (chainId === 1) return MAINNET_USDC as `0x${string}`;
+  if (chainId === 11155111) return SEPOLIA_USDC as `0x${string}`;
+  return '' as `0x${string}`;
+}
+
+// Legacy exports (default to Sepolia for backwards compatibility)
+export const VAULT_ADDRESS = SEPOLIA_VAULT as `0x${string}`;
+export const USDC_ADDRESS = SEPOLIA_USDC as `0x${string}`;
 
 // Minimal ERC20 ABI for USDC interactions
 export const ERC20_ABI = [
@@ -147,6 +166,21 @@ export const VAULT_ABI = [
     inputs: [{ name: 'account', type: 'address' }],
     name: 'roles',
     outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'role_manager',
+    outputs: [{ name: '', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  // Queue Management
+  {
+    inputs: [],
+    name: 'get_default_queue',
+    outputs: [{ name: '', type: 'address[]' }],
     stateMutability: 'view',
     type: 'function',
   },
