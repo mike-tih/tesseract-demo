@@ -20,6 +20,12 @@ ERC-4626 vault aggregator with a fork of Yearn V3 contract that accepts USDC and
 
 [https://tesseract-demo-alpha.vercel.app/](https://tesseract-demo-alpha.vercel.app/)
 
+## Requested Documentation
+
+- **[Architecture and Strategies](./docs/architecture-and-strategies.md)** - System architecture, reward distribution, capital management, and strategy implementation
+- **[Security](./docs/security.md)** - Security risks, failure modes, design tradeoffs, and user protection mechanisms
+- **[Next Steps](./docs/next-steps.md)** - Potential enhancements: allocator bot, reward harvester, and subgraph
+
 ## Project Structure
 
 ```
@@ -161,17 +167,28 @@ Deploy `dist/` folder to Vercel, Netlify, or any static hosting.
 
 **Contracts (`contracts/.env`):**
 ```env
-MAINNET_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY
-PRIVATE_KEY=your_private_key
-ADMIN_ADDRESS=0x...
+MAINNET_RPC_URL=
+SEPOLIA_RPC_URL=
+PRIVATE_KEY=
+ETHERSCAN_API_KEY=
+FORKING=false
 MAINNET_USDC_ADDRESS=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+SEPOLIA_USDC_ADDRESS=0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238
+ADMIN_ADDRESS=
+VAULT_NAME=Tesseract Demo Vault
+VAULT_SYMBOL=TDV
+PROFIT_MAX_UNLOCK_TIME=604800
+MAX_DEPOSIT_LIMIT=10000000
 ```
 
 **Frontend (`frontend/.env`):**
 ```env
-VITE_WALLET_CONNECT_ID=your_walletconnect_project_id
-VITE_MAINNET_VAULT_ADDRESS=0x...
+VITE_WALLET_CONNECT_ID=
+VITE_MAINNET_VAULT_ADDRESS=
 VITE_MAINNET_USDC_ADDRESS=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+VITE_SEPOLIA_VAULT_ADDRESS=
+VITE_SEPOLIA_USDC_ADDRESS=0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238
+VITE_DEFAULT_CHAIN_ID=1
 ```
 
 ## Tech Stack
