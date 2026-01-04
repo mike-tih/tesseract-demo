@@ -64,11 +64,13 @@ export default function AdminPage() {
   const { writeContract: writeAddStrategy, data: addStrategyHash } = useWriteContract()
   const { writeContract: writeUpdateDebt, data: updateDebtHash } = useWriteContract()
   const { writeContract: writeSetDepositLimit, data: setDepositLimitHash } = useWriteContract()
+  const { writeContract: writeProcessReport, data: processReportHash } = useWriteContract()
 
   // Transaction confirmations
   const { isLoading: isAddingStrategy } = useWaitForTransactionReceipt({ hash: addStrategyHash })
   const { isLoading: isUpdatingDebt } = useWaitForTransactionReceipt({ hash: updateDebtHash })
   const { isLoading: isSettingDepositLimit } = useWaitForTransactionReceipt({ hash: setDepositLimitHash })
+  const { isLoading: isProcessingReport } = useWaitForTransactionReceipt({ hash: processReportHash })
 
   const networkName = chainId === 1 ? 'Mainnet' : chainId === 11155111 ? 'Sepolia' : 'Unknown'
 
@@ -198,6 +200,21 @@ export default function AdminPage() {
       setTimeout(() => refetchDepositLimit(), 2000)
     } catch (error) {
       console.error('Set deposit limit failed:', error)
+    }
+  }
+
+  const handleProcessReport = async (strategyAddress: string) => {
+    if (!vaultAddress || !isAdmin) return
+
+    try {
+      writeProcessReport({
+        address: vaultAddress,
+        abi: VAULT_ABI,
+        functionName: 'process_report',
+        args: [strategyAddress as `0x${string}`],
+      })
+    } catch (error) {
+      console.error('Process report failed:', error)
     }
   }
 
@@ -406,34 +423,47 @@ export default function AdminPage() {
                             Morpho ↗
                           </a>
                         </div>
-                        {canManageDebt && (
-                          <div className="flex gap-2 mt-1.5 pt-1.5 border-t border-slate-600">
-                            <input
-                              type="number"
-                              className="input flex-1 text-xs py-1"
-                              placeholder="Max Debt (USDC)"
-                              id={`maxdebt-${strategy.address}`}
-                              step="0.000001"
-                              min="0"
-                            />
-                            <button
-                              className="btn-secondary text-xs px-2 py-1"
-                              onClick={() => {
-                                const input = document.getElementById(`maxdebt-${strategy.address}`) as HTMLInputElement
-                                if (input && input.value && parseFloat(input.value) > 0) {
-                                  writeUpdateDebt({
-                                    address: vaultAddress,
-                                    abi: VAULT_ABI,
-                                    functionName: 'update_max_debt_for_strategy',
-                                    args: [strategy.address as `0x${string}`, parseUnits(input.value, 6)],
-                                  })
-                                  input.value = ''
-                                }
-                              }}
-                              disabled={isUpdatingDebt}
-                            >
-                              Set Max
-                            </button>
+                        {(canManageDebt || isAdmin) && (
+                          <div className="space-y-2 mt-1.5 pt-1.5 border-t border-slate-600">
+                            {canManageDebt && (
+                              <div className="flex gap-2">
+                                <input
+                                  type="number"
+                                  className="input flex-1 text-xs py-1"
+                                  placeholder="Max Debt (USDC)"
+                                  id={`maxdebt-${strategy.address}`}
+                                  step="0.000001"
+                                  min="0"
+                                />
+                                <button
+                                  className="btn-secondary text-xs px-2 py-1"
+                                  onClick={() => {
+                                    const input = document.getElementById(`maxdebt-${strategy.address}`) as HTMLInputElement
+                                    if (input && input.value && parseFloat(input.value) > 0) {
+                                      writeUpdateDebt({
+                                        address: vaultAddress,
+                                        abi: VAULT_ABI,
+                                        functionName: 'update_max_debt_for_strategy',
+                                        args: [strategy.address as `0x${string}`, parseUnits(input.value, 6)],
+                                      })
+                                      input.value = ''
+                                    }
+                                  }}
+                                  disabled={isUpdatingDebt}
+                                >
+                                  Set Max
+                                </button>
+                              </div>
+                            )}
+                            {isAdmin && (
+                              <button
+                                className="btn-primary text-xs px-2 py-1 w-full"
+                                onClick={() => handleProcessReport(strategy.address)}
+                                disabled={isProcessingReport}
+                              >
+                                {isProcessingReport ? 'Processing...' : '📊 Process Report & Update Share Price'}
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>

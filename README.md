@@ -72,6 +72,7 @@ User (USDC) → Tesseract Vault (ERC-4626) → Strategies (MetaMorpho Vaults)
 - Add/remove strategies
 - Set max debt per strategy
 - Rebalance capital allocation
+- Process strategy reports to update share price with profits/losses
 - Manage deposit limits
 - Role management (14 role types)
 

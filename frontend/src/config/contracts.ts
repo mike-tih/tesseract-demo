@@ -203,6 +203,16 @@ export const VAULT_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
+  {
+    inputs: [{ name: 'strategy', type: 'address' }],
+    name: 'process_report',
+    outputs: [
+      { name: 'gain', type: 'uint256' },
+      { name: 'loss', type: 'uint256' },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
   // Role Management
   {
     inputs: [{ name: 'account', type: 'address' }],

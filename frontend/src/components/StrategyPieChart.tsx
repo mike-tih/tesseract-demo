@@ -122,7 +122,7 @@ export function StrategyPieChart({ strategies, totalAssets }: StrategyPieChartPr
             />
             <span className="text-slate-300 truncate flex-1">{slice.name}</span>
             <span className="text-vault-blue font-semibold whitespace-nowrap">
-              {slice.percentage.toFixed(1)}%
+              {slice.percentage.toFixed(2)}%
             </span>
           </div>
         ))}

@@ -116,13 +116,13 @@ export default function UserPage() {
           <div>
             <p className="text-sm text-slate-400 mb-1">Your Balance</p>
             <p className="text-3xl font-bold">
-              {loadingPosition ? '...' : `$${assets.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              {!isConnected ? '—' : loadingPosition ? '...' : `$${assets.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             </p>
           </div>
           <div>
             <p className="text-sm text-slate-400 mb-1">Your Shares</p>
             <p className="text-3xl font-bold">
-              {loadingPosition ? '...' : shares.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {!isConnected ? '—' : loadingPosition ? '...' : shares.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -155,7 +155,7 @@ export default function UserPage() {
                 </button>
               </div>
               <p className="text-sm text-slate-400 mt-1">
-                Available: {usdcBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC
+                Available: {!isConnected ? '—' : usdcBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC
               </p>
             </div>
             {!isConnected ? (
@@ -210,7 +210,7 @@ export default function UserPage() {
                 </button>
               </div>
               <p className="text-sm text-slate-400 mt-1">
-                Available: {assets.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC
+                Available: {!isConnected ? '—' : assets.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC
               </p>
             </div>
             {!isConnected ? (
@@ -258,10 +258,10 @@ export default function UserPage() {
                         </div>
                         <div className="flex items-center gap-2 ml-2 whitespace-nowrap text-sm">
                           <span className="text-slate-300">
-                            {strategy.currentDebt.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} USDC
+                            {strategy.currentDebt.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} USDC
                           </span>
                           <span className="text-slate-500">|</span>
-                          <span className="text-vault-blue font-semibold">{percentage.toFixed(1)}%</span>
+                          <span className="text-vault-blue font-semibold">{percentage.toFixed(2)}%</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">

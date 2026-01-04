@@ -69,10 +69,12 @@ The vault uses an ERC-4626 share mechanism for reward distribution:
 
 2. **Yield Accrual:**
    - Strategies generate yield from underlying protocols
-   - Yield is reported back to vault via `process_report()`
+   - **Admin must call `process_report(strategy)`** to update vault accounting
+   - Vault queries strategy's current value and calculates profit/loss
    - Vault increases `totalAssets` without minting new shares
    - This causes `pricePerShare` to increase proportionally
    - All share holders automatically earn yield via price appreciation
+   - ⚠️ **Important:** Without calling `process_report()`, yield stays in strategy but doesn't affect share price
 
 3. **Withdrawals:**
    - User redeems shares for USDC
@@ -141,6 +143,20 @@ Strategy A → Vault (temporary idle) → Strategy B
 - Admin/bot calls `update_debt(strategyA, lower_amount)` - withdraws
 - Then calls `update_debt(strategyB, higher_amount)` - deposits
 - Capital flows through vault's idle balance as intermediary
+
+**During Profit/Loss Reporting:**
+```
+Admin calls process_report(strategy) → Vault queries strategy.totalAssets()
+                                     → Calculates gain/loss vs current_debt
+                                     → Updates vault accounting
+                                     → Increases/decreases pricePerShare
+                                     → All shareholders automatically benefit/share loss
+```
+- **Critical step:** Without calling `process_report()`, profits remain in strategy but don't affect share price
+- Admin must periodically call `process_report(strategy)` for each strategy
+- Profits unlock linearly over 7 days (`profitMaxUnlockTime`)
+- Increases `pricePerShare` → users get more USDC when withdrawing
+- This is how yield is distributed to all vault token holders
 
 ---
 
