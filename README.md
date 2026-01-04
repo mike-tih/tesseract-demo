@@ -25,6 +25,7 @@ ERC-4626 vault aggregator with a fork of Yearn V3 contract that accepts USDC and
 - **[Architecture and Strategies](./docs/architecture-and-strategies.md)** - System architecture, reward distribution, capital management, and strategy implementation
 - **[Security](./docs/security.md)** - Security risks, failure modes, design tradeoffs, and user protection mechanisms
 - **[Next Steps](./docs/next-steps.md)** - Potential enhancements: allocator bot, reward harvester, and subgraph
+- **[Picked Strategies](./docs/picked-strategies.md)** - Selected Morpho USDC vaults with exposure breakdown and rationale
 
 ## Project Structure
 
